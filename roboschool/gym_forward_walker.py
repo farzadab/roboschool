@@ -134,7 +134,8 @@ class RoboschoolForwardWalker(SharedMemoryClientEnv):
             'AliveRew': alive,
             'ProgressRew': progress,
             'OriginalRew': sum(self.rewards[1:]) + alive,
-            'MaxTorque': np.max(np.abs(self.applied_torques if self.applied_torques else 0))
+            'MaxAbsTorque': np.max(np.abs(self.applied_torques if self.applied_torques else 0)),
+            'MeanAbsTorque': np.mean(np.abs(self.applied_torques if self.applied_torques else 0)),
         }
 
         self.frame  += 1
