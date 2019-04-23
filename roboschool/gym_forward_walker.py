@@ -99,7 +99,7 @@ class RoboschoolForwardWalker(SharedMemoryClientEnv):
 
         state = self.calc_state()  # also calculates self.joints_at_limit
 
-        alive = self.alive_coef * float(self.alive_bonus(state[0]+self.initial_z, self.body_rpy[1]))   # state[0] is body height above ground, body_rpy[1] is pitch
+        alive = float(self.alive_bonus(state[0]+self.initial_z, self.body_rpy[1]))   # state[0] is body height above ground, body_rpy[1] is pitch
         done = alive < 0
         if not np.isfinite(state).all():
             print("~INF~", state)
@@ -123,7 +123,7 @@ class RoboschoolForwardWalker(SharedMemoryClientEnv):
         joints_at_limit_cost = float(self.joints_at_limit_cost * self.joints_at_limit)
 
         self.rewards = [
-            alive,
+            self.alive_coef * alive,
             progress,
             electricity_cost,
             joints_at_limit_cost,
@@ -131,9 +131,9 @@ class RoboschoolForwardWalker(SharedMemoryClientEnv):
             ]
         
         extras = {
-            'AliveRew': alive / self.alive_coef,
+            'AliveRew': alive,
             'ProgressRew': progress,
-            'OriginalRew': sum(self.rewards[1:]) + alive / self.alive_coef,
+            'OriginalRew': sum(self.rewards[1:]) + alive,
             'MaxTorque': np.max(np.abs(self.applied_torques if self.applied_torques else 0))
         }
 
