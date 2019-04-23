@@ -20,8 +20,9 @@ class RoboschoolHopper(RoboschoolForwardWalkerMujocoXML):
 
 class RoboschoolWalker2d(RoboschoolForwardWalkerMujocoXML):
     foot_list = ["foot", "foot_left"]
-    def __init__(self):
-        RoboschoolForwardWalkerMujocoXML.__init__(self, "walker2d.xml", "torso", action_dim=6, obs_dim=22, power=0.40)
+    def __init__(self, alive_coef=1.0, power_coef=1.0):
+        RoboschoolForwardWalkerMujocoXML.__init__(self, "walker2d.xml", "torso", action_dim=6, obs_dim=22, power=0.40*power_coef)
+        self.alive_coef = alive_coef
     def alive_bonus(self, z, pitch):
         return +1 if z > 0.8 and abs(pitch) < 1.0 else -1
     def robot_specific_reset(self):
@@ -59,11 +60,12 @@ class RoboschoolHumanoid(RoboschoolForwardWalkerMujocoXML):
     foot_list = ["right_foot", "left_foot"]
     TASK_WALK, TASK_STAND_UP, TASK_ROLL_OVER, TASKS = range(4)
 
-    def __init__(self, model_xml='humanoid_symmetric.xml'):
-        RoboschoolForwardWalkerMujocoXML.__init__(self, model_xml, 'torso', action_dim=17, obs_dim=44, power=0.41)
+    def __init__(self, model_xml='humanoid_symmetric.xml', alive_coef=1.0, power_coef=1.0):
+        RoboschoolForwardWalkerMujocoXML.__init__(self, model_xml, 'torso', action_dim=17, obs_dim=44, power=0.41*power_coef)
         # 17 joints, 4 of them important for walking (hip, knee), others may as well be turned off, 17/4 = 4.25
         self.electricity_cost  = 4.25*RoboschoolForwardWalkerMujocoXML.electricity_cost
         self.stall_torque_cost = 4.25*RoboschoolForwardWalkerMujocoXML.stall_torque_cost
+        self.alive_coef = alive_coef
         self.initial_z = 0.8
 
     def robot_specific_reset(self):

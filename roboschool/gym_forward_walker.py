@@ -17,6 +17,7 @@ class RoboschoolForwardWalker(SharedMemoryClientEnv):
         self.camera_y = 4.3
         self.camera_z = 45.0
         self.camera_follow = 0
+        self.applied_torques = []
 
     def create_single_player_scene(self):
         return SinglePlayerStadiumScene(gravity=9.8, timestep=0.0165/4, frame_skip=4)
@@ -39,8 +40,12 @@ class RoboschoolForwardWalker(SharedMemoryClientEnv):
 
     def apply_action(self, a):
         assert( np.isfinite(a).all() )
+        self.applied_torques = []
         for n,j in enumerate(self.ordered_joints):
-            j.set_motor_torque( self.power*j.power_coef*float(np.clip(a[n], -1, +1)) )
+            torque = self.power*j.power_coef*float(np.clip(a[n], -1, +1))
+            j.set_motor_torque(torque)
+            self.applied_torques.append(torque)
+
 
     def calc_state(self):
         j = np.array([j.current_relative_position() for j in self.ordered_joints], dtype=np.float32).flatten()
@@ -85,6 +90,7 @@ class RoboschoolForwardWalker(SharedMemoryClientEnv):
     foot_collision_cost  = -1.0    # touches another leg, or other objects, that cost makes robot avoid smashing feet into itself
     foot_ground_object_names = set(["floor"])  # to distinguish ground and other objects
     joints_at_limit_cost = -0.2    # discourage stuck joints
+    alive_coef           = +1.0
 
     def step(self, a):
         if not self.scene.multiplayer:  # if multiplayer, action first applied to all robots, then global step() called, then step() for all robots with the same actions
@@ -93,7 +99,7 @@ class RoboschoolForwardWalker(SharedMemoryClientEnv):
 
         state = self.calc_state()  # also calculates self.joints_at_limit
 
-        alive = float(self.alive_bonus(state[0]+self.initial_z, self.body_rpy[1]))   # state[0] is body height above ground, body_rpy[1] is pitch
+        alive = self.alive_coef * float(self.alive_bonus(state[0]+self.initial_z, self.body_rpy[1]))   # state[0] is body height above ground, body_rpy[1] is pitch
         done = alive < 0
         if not np.isfinite(state).all():
             print("~INF~", state)
@@ -123,6 +129,13 @@ class RoboschoolForwardWalker(SharedMemoryClientEnv):
             joints_at_limit_cost,
             feet_collision_cost
             ]
+        
+        extras = {
+            'AliveRew': alive / self.alive_coef,
+            'ProgressRew': progress,
+            'OriginalRew': sum(self.rewards[1:]) + alive / self.alive_coef,
+            'MaxTorque': np.max(np.abs(self.applied_torques if self.applied_torques else 0))
+        }
 
         self.frame  += 1
         if (done and not self.done) or self.frame==self.spec.timestep_limit:
@@ -130,7 +143,7 @@ class RoboschoolForwardWalker(SharedMemoryClientEnv):
         self.done   += done   # 2 == 1+True
         self.reward += sum(self.rewards)
         self.HUD(state, a, done)
-        return state, sum(self.rewards), bool(done), {}
+        return state, sum(self.rewards), bool(done), extras
 
     def episode_over(self, frames):
         pass
