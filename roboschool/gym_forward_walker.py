@@ -7,8 +7,10 @@ import numpy as np
 import os, sys
 
 class RoboschoolForwardWalker(SharedMemoryClientEnv):
-    def __init__(self, power):
-        self.power = power
+    def __init__(self, power, alive_coef=1.0, power_coef=1.0, action_coef=1.0):
+        self.power = power * power_coef
+        self.alive_coef = alive_coef
+        self.action_coef = action_coef
         self.camera_x = 0
         self.walk_target_x = 1e3  # kilometer away
         self.walk_target_y = 0
@@ -90,9 +92,10 @@ class RoboschoolForwardWalker(SharedMemoryClientEnv):
     foot_collision_cost  = -1.0    # touches another leg, or other objects, that cost makes robot avoid smashing feet into itself
     foot_ground_object_names = set(["floor"])  # to distinguish ground and other objects
     joints_at_limit_cost = -0.2    # discourage stuck joints
-    alive_coef           = +1.0
+    alive_coef           = +1.0    # this gets overwritten in __init__
 
     def step(self, a):
+        a *= self.action_coef
         if not self.scene.multiplayer:  # if multiplayer, action first applied to all robots, then global step() called, then step() for all robots with the same actions
             self.apply_action(a)
             self.scene.global_step()

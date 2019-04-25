@@ -13,16 +13,15 @@ class RoboschoolForwardWalkerMujocoXML(RoboschoolForwardWalker, RoboschoolMujoco
 
 class RoboschoolHopper(RoboschoolForwardWalkerMujocoXML):
     foot_list = ["foot"]
-    def __init__(self):
-        RoboschoolForwardWalkerMujocoXML.__init__(self, "hopper.xml", "torso", action_dim=3, obs_dim=15, power=0.75)
+    def __init__(self, *args, **kwargs):
+        RoboschoolForwardWalkerMujocoXML.__init__(self, "hopper.xml", "torso", action_dim=3, obs_dim=15, power=0.75, *args, **kwargs)
     def alive_bonus(self, z, pitch):
         return +1 if z > 0.8 and abs(pitch) < 1.0 else -1
 
 class RoboschoolWalker2d(RoboschoolForwardWalkerMujocoXML):
     foot_list = ["foot", "foot_left"]
-    def __init__(self, alive_coef=1.0, power_coef=1.0):
-        RoboschoolForwardWalkerMujocoXML.__init__(self, "walker2d.xml", "torso", action_dim=6, obs_dim=22, power=0.40*power_coef)
-        self.alive_coef = alive_coef
+    def __init__(self, *args, **kwargs):
+        RoboschoolForwardWalkerMujocoXML.__init__(self, "walker2d.xml", "torso", action_dim=6, obs_dim=22, power=0.40, *args, **kwargs)
     def alive_bonus(self, z, pitch):
         return +1 if z > 0.8 and abs(pitch) < 1.0 else -1
     def robot_specific_reset(self):
@@ -32,8 +31,8 @@ class RoboschoolWalker2d(RoboschoolForwardWalkerMujocoXML):
 
 class RoboschoolHalfCheetah(RoboschoolForwardWalkerMujocoXML):
     foot_list = ["ffoot", "fshin", "fthigh",  "bfoot", "bshin", "bthigh"]  # track these contacts with ground
-    def __init__(self):
-        RoboschoolForwardWalkerMujocoXML.__init__(self, "half_cheetah.xml", "torso", action_dim=6, obs_dim=26, power=0.90)
+    def __init__(self, *args, **kwargs):
+        RoboschoolForwardWalkerMujocoXML.__init__(self, "half_cheetah.xml", "torso", action_dim=6, obs_dim=26, power=0.90, *args, **kwargs)
     def alive_bonus(self, z, pitch):
         # Use contact other than feet to terminate episode: due to a lot of strange walks using knees
         return +1 if np.abs(pitch) < 1.0 and not self.feet_contact[1] and not self.feet_contact[2] and not self.feet_contact[4] and not self.feet_contact[5] else -1
@@ -48,8 +47,8 @@ class RoboschoolHalfCheetah(RoboschoolForwardWalkerMujocoXML):
 
 class RoboschoolAnt(RoboschoolForwardWalkerMujocoXML):
     foot_list = ['front_left_foot', 'front_right_foot', 'left_back_foot', 'right_back_foot']
-    def __init__(self):
-        RoboschoolForwardWalkerMujocoXML.__init__(self, "ant.xml", "torso", action_dim=8, obs_dim=28, power=2.5)
+    def __init__(self, *args, **kwargs):
+        RoboschoolForwardWalkerMujocoXML.__init__(self, "ant.xml", "torso", action_dim=8, obs_dim=28, power=2.5, *args, **kwargs)
     def alive_bonus(self, z, pitch):
         return +1 if z > 0.26 else -1  # 0.25 is central sphere rad, die if it scrapes the ground
 
@@ -60,12 +59,11 @@ class RoboschoolHumanoid(RoboschoolForwardWalkerMujocoXML):
     foot_list = ["right_foot", "left_foot"]
     TASK_WALK, TASK_STAND_UP, TASK_ROLL_OVER, TASKS = range(4)
 
-    def __init__(self, model_xml='humanoid_symmetric.xml', alive_coef=1.0, power_coef=1.0):
-        RoboschoolForwardWalkerMujocoXML.__init__(self, model_xml, 'torso', action_dim=17, obs_dim=44, power=0.41*power_coef)
+    def __init__(self, model_xml='humanoid_symmetric.xml', *args, **kwargs):
+        RoboschoolForwardWalkerMujocoXML.__init__(self, model_xml, 'torso', action_dim=17, obs_dim=44, power=0.41, *args, **kwargs)
         # 17 joints, 4 of them important for walking (hip, knee), others may as well be turned off, 17/4 = 4.25
         self.electricity_cost  = 4.25*RoboschoolForwardWalkerMujocoXML.electricity_cost
         self.stall_torque_cost = 4.25*RoboschoolForwardWalkerMujocoXML.stall_torque_cost
-        self.alive_coef = alive_coef
         self.initial_z = 0.8
 
     def robot_specific_reset(self):

@@ -8,8 +8,8 @@ class RoboschoolAtlasForwardWalk(RoboschoolForwardWalker, RoboschoolUrdfEnv):
     random_yaw = False
     foot_list = ["r_foot", "l_foot"]
 
-    def __init__(self):
-        RoboschoolForwardWalker.__init__(self, power=0.30)
+    def __init__(self, *args, **kwargs):
+        RoboschoolForwardWalker.__init__(self, power=0.30, *args, **kwargs)
         RoboschoolUrdfEnv.__init__(self,
             "atlas_description/urdf/atlas_v4_with_multisense.urdf",
             "pelvis",
