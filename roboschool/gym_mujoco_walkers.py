@@ -7,9 +7,9 @@ import numpy as np
 import os, sys
 
 class RoboschoolForwardWalkerMujocoXML(RoboschoolForwardWalker, RoboschoolMujocoXmlEnv):
-    def __init__(self, fn, robot_name, action_dim, obs_dim, power):
+    def __init__(self, fn, robot_name, action_dim, obs_dim, power, *args, **kwargs):
         RoboschoolMujocoXmlEnv.__init__(self, fn, robot_name, action_dim, obs_dim)
-        RoboschoolForwardWalker.__init__(self, power)
+        RoboschoolForwardWalker.__init__(self, power, *args, **kwargs)
 
 class RoboschoolHopper(RoboschoolForwardWalkerMujocoXML):
     foot_list = ["foot"]
