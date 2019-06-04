@@ -20,8 +20,8 @@ class RoboschoolForwardWalker(SharedMemoryClientEnv):
         self.power = power * power_coef
         self.alive_coef = alive_coef
         self.action_coef = action_coef
-        self.sim_frame_skip = sim_frame_skip
-        self.control_time_step = sim_time_step * sim_frame_skip
+        self.sim_frame_skip = round(sim_frame_skip)
+        self.control_time_step = sim_time_step * self.sim_frame_skip
         self.camera_x = 0
         self.walk_target_x = 1e3  # kilometer away
         self.walk_target_y = 0
