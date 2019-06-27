@@ -17,7 +17,8 @@ class RoboschoolForwardWalker(SharedMemoryClientEnv):
         sim_frame_skip=4,
         sim_time_step=1 / 240,
     ):
-        self.power = power * power_coef
+        self.tlimit_mult = power_coef
+        self.power = power
         self.alive_coef = alive_coef
         self.action_coef = action_coef
         self.sim_frame_skip = int(round(sim_frame_skip))
@@ -61,7 +62,11 @@ class RoboschoolForwardWalker(SharedMemoryClientEnv):
         assert np.isfinite(a).all()
         self.applied_torques = []
         for n, j in enumerate(self.ordered_joints):
-            torque = self.power * j.power_coef * float(np.clip(a[n], -1, +1))
+            torque = (
+                self.power
+                * j.power_coef
+                * float(np.clip(a[n], -self.tlimit_mult, self.tlimit_mult))
+            )
             j.set_motor_torque(torque)
             self.applied_torques.append(torque)
 
@@ -97,6 +102,9 @@ class RoboschoolForwardWalker(SharedMemoryClientEnv):
             ]
         )
         self.angle_to_target = self.walk_target_theta - yaw
+        # print(
+        #     "%5.2f, %5.2f, %5.2f" % (self.walk_target_theta, yaw, self.angle_to_target)
+        # )
 
         self.rot_minus_yaw = np.array(
             [
@@ -108,6 +116,7 @@ class RoboschoolForwardWalker(SharedMemoryClientEnv):
         vx, vy, vz = np.dot(
             self.rot_minus_yaw, self.robot_body.speed()
         )  # rotate speed back to body point of view
+        # print(vx, vy, vz)
 
         more = np.array(
             [
@@ -116,8 +125,8 @@ class RoboschoolForwardWalker(SharedMemoryClientEnv):
                 np.cos(self.angle_to_target),
                 0.3 * vx,
                 0.3 * vy,
-                0.3
-                * vz,  # 0.3 is just scaling typical speed into -1..+1, no physical sense here
+                0.3 * vz,
+                # 0.3 is just scaling typical speed into -1..+1, no physical sense here
                 r,
                 p,
             ],
